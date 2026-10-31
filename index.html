@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Agent 基本功：從開工到收工，讓 AI 做出作品</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/night.css" />
+  <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.min.js"></script>
+  <style>
+    :root { --accent:#e8643a; --accent2:#4fc3f7; --success:#81c784; --warn:#ffb74d; }
+    .reveal { font-family:'Segoe UI','Microsoft JhengHei','Noto Sans TC',sans-serif; font-size:30px; }
+    .reveal h1,.reveal h2,.reveal h3 { font-family:inherit; font-weight:700; letter-spacing:-0.01em; text-transform:none; }
+    .reveal h1 { font-size:1.9em; }
+    .reveal h2 { font-size:1.15em; color:var(--accent2); margin:0 0 .35em; text-align:left; }
+    .reveal .progress { color:var(--accent); }
+    .reveal section { text-align:left; }
+    .reveal .slides section .fragment { opacity:.15; }
+    .reveal .slides section .fragment.visible { opacity:1; }
+
+    .crumb { position:absolute; top:-1.9em; left:0; font-size:.42em; color:var(--accent); letter-spacing:.08em; font-weight:700; }
+    .c { font-size:.68em; line-height:1.5; color:#e6e6e6; position:relative; }
+    .c p { margin:.3em 0; }
+    ul.b { list-style:none; padding:0; margin:.2em 0; }
+    ul.b li { padding:.18em 0 .18em 1.1em; position:relative; }
+    ul.b li::before { content:"▸"; position:absolute; left:0; color:var(--accent); }
+    ul.b ul { list-style:none; padding-left:1em; font-size:.92em; color:#cfcfcf; }
+    ul.b ul li::before { content:"·"; }
+    .k { color:var(--accent2); font-weight:700; }
+    .a { color:var(--accent); font-weight:700; }
+    .w { color:var(--warn); }
+    .g { color:var(--success); }
+    .dim { color:#9aa; font-size:.88em; }
+    code { background:rgba(255,255,255,.1); padding:1px 6px; border-radius:4px; font-size:.88em; color:#ffd7a8; font-family:Consolas,monospace; }
+    pre.cd { background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.15); border-radius:8px; padding:.7em 1em; font-size:.82em; line-height:1.5; color:#d9e6ff; white-space:pre-wrap; font-family:Consolas,'Microsoft JhengHei',monospace; margin:.4em 0; }
+    table.t { border-collapse:collapse; width:100%; font-size:.86em; margin:.3em 0; }
+    table.t th { background:rgba(79,195,247,.18); color:var(--accent2); text-align:left; padding:.28em .6em; border:1px solid rgba(255,255,255,.14); }
+    table.t td { padding:.26em .6em; border:1px solid rgba(255,255,255,.12); vertical-align:top; }
+    table.t.s { font-size:.8em; }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .three { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .four { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .box { background:rgba(255,255,255,.06); border-radius:10px; padding:.7em 1em; border-top:4px solid var(--accent2); }
+    .box.o { border-top-color:var(--accent); } .box.y { border-top-color:var(--warn); } .box.gr { border-top-color:var(--success); }
+    .box h3 { font-size:1em; margin:0 0 .3em; color:var(--accent2); }
+    .box.o h3 { color:var(--accent); } .box.y h3 { color:var(--warn); } .box.gr h3 { color:var(--success); }
+    .box.ic { text-align:center; }
+    .box.ic img { width:64px; height:64px; display:block; margin:0 auto .3em; filter:drop-shadow(0 0 10px rgba(79,195,247,.6)); }
+    .say { font-size:.62em; border-left:4px solid var(--accent); background:rgba(232,100,58,.1); padding:.5em .9em; border-radius:6px; margin:.5em 0; color:#f3d9cf; }
+    .chap { text-align:center !important; }
+    .chap .num { font-size:3.6em; font-weight:900; color:var(--accent); line-height:1; }
+    .chap h1 { color:#fff; margin:.1em 0 .2em; }
+    .chap .sub { font-size:.7em; color:#b8c4d0; }
+    .flow { display:flex; align-items:stretch; gap:8px; margin:.5em 0; }
+    .flow .st { flex:1; background:rgba(255,255,255,.06); border-radius:10px; padding:.5em .3em; text-align:center; border-top:4px solid var(--accent2); font-size:.78em; }
+    .flow .st img { width:54px; height:54px; display:block; margin:0 auto .2em; filter:drop-shadow(0 0 8px rgba(79,195,247,.6)); }
+    .flow .st b { color:var(--accent2); display:block; }
+    .flow .st small { color:#aab; display:block; font-size:.78em; margin-top:.2em; }
+    .flow .ar { align-self:center; color:var(--accent); font-size:1.1em; }
+    .qrw { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; text-align:center; }
+    .qrw .q { background:rgba(255,255,255,.06); border-radius:10px; padding:.5em; }
+    .qrw .q img { width:150px; height:150px; border-radius:6px; background:#fff; }
+    .qrw .q b { display:block; color:var(--accent2); font-size:.92em; }
+    .qrw .q span { font-size:.78em; color:#bbb; }
+    .wall { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; font-size:.78em; }
+    .wall a { display:block; background:rgba(255,255,255,.06); border-radius:8px; padding:.4em .6em; border-left:3px solid var(--accent2); text-decoration:none; color:#e6e6e6; }
+    .wall a b { color:var(--accent2); display:block; font-size:.92em; }
+    .wall a span { color:#aab; font-size:.82em; }
+    .reveal a { color:var(--accent2); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+    #viz-wrap { position:relative; height:330px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.15); }
+    #viz-wrap .pane { position:absolute; inset:0; padding:1em 1.4em; font-size:.62em; line-height:1.6; }
+    #viz-before { background:#1b1f2a; }
+    #viz-after { background:#142a22; clip-path:inset(0 100% 0 0); }
+    #viz-divider { position:absolute; top:0; left:0; width:3px; height:100%; background:linear-gradient(to bottom,transparent,#4fc3f7,transparent); box-shadow:0 0 12px #4fc3f7; pointer-events:none; }
+    #viz-slider { width:100%; margin-top:10px; }
+    .vlab { position:absolute; top:8px; font-size:.5em; font-weight:700; padding:2px 10px; border-radius:10px; z-index:3; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ===== 1 封面 ===== -->
+<section data-background-image="images/cover.png" data-background-opacity="0.45" data-background-size="cover" class="chap">
+  <div style="font-size:.5em;background:var(--accent);display:inline-block;padding:4px 16px;border-radius:20px;font-weight:700;letter-spacing:.08em;">部門分享｜2026</div>
+  <h1 style="margin-top:.5em;">AI Agent 基本功</h1>
+  <h2 style="text-align:center;color:var(--accent);font-size:1.05em;">從開工到收工，讓 AI 做出作品</h2>
+  <p class="sub" style="margin-top:1.2em;">我的工作流・一鍵安裝包・已上線成品</p>
+</section>
+
+<!-- ===== 2 破冰 文字雲 ===== -->
+<section id="slide-wordcloud">
+  <h2 style="font-size:1em;margin-bottom:.4em;">你現在怎麼用 AI？用一個詞回答（例：查資料、寫程式、翻譯…）</h2>
+  <div style="display:grid;grid-template-columns:250px 1fr;gap:14px;height:460px;font-size:.6em;">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:14px;">
+        <div style="font-size:.7em;color:var(--accent2);font-weight:700;margin-bottom:8px;">輸入你的答案</div>
+        <input id="wc-input" type="text" placeholder="輸入關鍵詞…" maxlength="20" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(79,195,247,.3);background:rgba(255,255,255,.08);color:#fff;font-size:15px;box-sizing:border-box;font-family:inherit;outline:none;" />
+        <button id="wc-btn" style="width:100%;margin-top:8px;padding:9px;background:var(--accent2);color:#0d1117;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;">送出 ↵</button>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:14px;flex:1;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="font-size:.7em;color:var(--accent2);font-weight:700;margin-bottom:8px;">熱門答案 <span style="display:inline-block;background:#ff4757;color:#fff;padding:2px 7px;border-radius:10px;font-size:.85em;animation:pulse 1.5s infinite;">LIVE</span></div>
+        <div id="wc-list" style="font-size:.75em;overflow-y:auto;flex:1;color:#ccc;"></div>
+        <div style="margin-top:8px;font-size:.62em;color:#666;border-top:1px solid rgba(255,255,255,.08);padding-top:6px;">總提交：<span id="wc-total" style="color:var(--accent);font-weight:700;">0</span>　不同答案：<span id="wc-unique" style="color:var(--accent2);font-weight:700;">0</span></div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,.04);border-radius:12px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.07);">
+      <canvas id="wc-canvas" style="width:100%;height:100%;display:block;"></canvas>
+      <div id="wc-empty" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#555;font-size:.8em;text-align:center;pointer-events:none;line-height:2;">輸入第一個答案<br>文字雲就會出現 ✨</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3 A2 ===== -->
+<section>
+  <div class="crumb">A　開場與全貌</div>
+  <h2>今天帶走什麼</h2>
+  <div class="three c" style="margin-top:.8em;">
+    <div class="box ic"><img src="images/icon_project.png" alt=""><h3>一個觀念</h3>Agent 在<b class="a">你的電腦</b>工作，<br>不是在雲端聊天視窗</div>
+    <div class="box ic o"><img src="images/icon_start.png" alt=""><h3>一套流程</h3>開工→研究討論→做出作品<br>→GitHub→Vercel→收工</div>
+    <div class="box ic gr"><img src="images/icon_connect.png" alt=""><h3>一包工具</h3>掃 QR code，<br>複製我的一鍵安裝包</div>
+  </div>
+</section>
+
+<!-- ===== 4 A3 ===== -->
+<section>
+  <div class="crumb">A　開場與全貌</div>
+  <h2>全貌地圖：七個主題串成一條線</h2>
+  <div class="c">
+    <div class="flow">
+      <div class="st"><b>B 觀念</b><small>專案、記憶、權限、用量、上下文</small></div><div class="ar">▶</div>
+      <div class="st"><b>C 能力</b><small>讀檔、寫程式、上網、做成品</small></div><div class="ar">▶</div>
+      <div class="st"><b>D 連接</b><small>MCP、CLI、權限</small></div><div class="ar">▶</div>
+      <div class="st"><b>E Skill</b><small>三層設定</small></div>
+    </div>
+    <div class="flow">
+      <div class="st"><b>F 跨機協作</b><small>雲端硬碟、同步、開工收工</small></div><div class="ar">▶</div>
+      <div class="st"><b>G 需求釐清</b><small>RDQ 四象限</small></div><div class="ar">▶</div>
+      <div class="st" style="border-top-color:var(--accent);"><b style="color:var(--accent);">H 實戰</b><small>我的工作流（主角）</small></div>
+    </div>
+    <p class="dim">為什麼要學？現在沒有痛點，先知道目前發展到哪；真的有需求時，這套觀念能少走很多彎路。門檻在「要從頭換一套思維」，不是工具難。</p>
+  </div>
+</section>
+
+<!-- ===== 5 B 章節 ===== -->
+<section class="chap" data-background-image="images/chapter.png" data-background-opacity="0.3" data-background-size="cover">
+  <div class="num">B</div><h1>核心觀念</h1><p class="sub">專案、記憶、權限、模型、用量、上下文</p>
+</section>
+
+<!-- B1 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>生成式 AI vs AI Agent</h2>
+  <div class="two c" style="margin-top:.6em;">
+    <div class="box"><h3>生成式 AI（雲端對話）</h3>
+      <ul class="b"><li>Gemini、NotebookLM、ChatGPT 聊天版</li><li>對話存在雲端，換電腦登入就能接續</li><li>只給文字答案，你得自己複製貼上、在工具之間切換</li></ul></div>
+    <div class="box o"><h3>AI Agent（本機動手）</h3>
+      <ul class="b"><li>把雲端的模型「請到你的電腦」工作</li><li>讀檔、改檔、跑程式、操作瀏覽器</li><li>你在電腦上能做的事，它都能代勞</li></ul></div>
+  </div>
+  <p class="c">以前工作流被切成一段一段，<span class="a">人當膠水</span>；Agent 讓人把時間留給思考與判斷。</p>
+</section>
+
+<!-- B2 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>要有「工作環境」，Agent 才能住進電腦</h2>
+  <div class="c">
+    <p>工作環境＝讓 AI 在電腦上運作的程式介面，像 AI 用的「作業系統」。</p>
+    <table class="t"><tr><th>載體</th><th>模型來源</th></tr>
+      <tr><td>Claude Code</td><td>Claude 系列（付費訂閱）</td></tr>
+      <tr><td>Codex 桌面版</td><td>ChatGPT／GPT 系列（付費訂閱）</td></tr>
+      <tr><td>AntiGravity</td><td>Google／Gemini（Google 方案）</td></tr></table>
+    <ul class="b"><li>付費版比較聰明、設定比較省事</li>
+      <li>入門：Codex 一般被認為性價比最高（含生圖，約每月 20 美元，較慢）；Claude Code 能力強但額度消耗快</li>
+      <li>不必三個都學，用手上已有的那個；<span class="k">觀念通用</span></li></ul>
+    <p class="w">⚠ 時效：免費模型與方案名稱常變，以現場當下為準。</p>
+  </div>
+</section>
+
+<!-- B3 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>專案＝電腦裡的一個資料夾</h2>
+  <ul class="b c">
+    <li>啟動 Agent 後第一件事：新增（或選擇）一個資料夾當「專案」，成品與對話紀錄都放這裡</li>
+    <li>一個專案可開<b>多個對話（Session）</b>，每個對話是全新的上下文<br><span class="dim">例：同一專案開三個對話——收集資料、製作成品、做互動頁</span></li>
+    <li>與雲端 AI 的「專案」類似，只是檔案在本機</li>
+    <li>習慣：新專案＝新資料夾；Agent 也讀得到專案外的資料夾，但成果集中放專案內最方便</li>
+  </ul>
+</section>
+
+<!-- B4 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>Agent 只記得兩個地方</h2>
+  <div class="two c" style="margin-top:.5em;">
+    <div class="box"><h3>全域設定檔</h3>任何專案、任何對話都會讀：<br>你是誰、語言偏好、通用工具、常用技能</div>
+    <div class="box o"><h3>專案設定檔</h3>只在這個專案讀：<br>專案目標、規則限制、依賴套件、目前進度</div>
+  </div>
+  <div class="c">
+    <p>每次開新對話，Agent 先讀全域、再讀專案——這兩份就是它的<span class="k">長期記憶</span>；其餘離開對話就不記得。</p>
+    <div class="say">口訣：全域放「我是誰」，專案放「我要做什麼」。</div>
+    <p class="dim">兩份都是 Markdown 純文字，用自然語言請 Agent 幫你寫、幫你改。</p>
+  </div>
+</section>
+
+<!-- B5 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>各家設定檔放哪裡（Windows，<code>~</code> ＝ <code>C:\Users\你的名稱</code>）</h2>
+  <div class="c">
+    <table class="t s">
+      <tr><th>項目</th><th>Claude Code</th><th>Codex</th><th>AntiGravity</th></tr>
+      <tr><td>全域設定檔</td><td><code>~/.claude/CLAUDE.md</code>（或 <code>~/.claude/rules/*.md</code>）</td><td><code>~/.codex/AGENTS.md</code></td><td><code>~/.gemini/GEMINI.md</code></td></tr>
+      <tr><td>專案設定檔</td><td><code>&lt;專案&gt;/CLAUDE.md</code></td><td><code>&lt;專案&gt;/AGENTS.md</code></td><td><code>&lt;專案&gt;/ANTIGRAVITY.md</code>、<code>AGENTS.md</code></td></tr>
+      <tr><td>全域技能</td><td><code>~/.claude/skills/&lt;名&gt;/SKILL.md</code></td><td><code>~/.codex/skills/&lt;名&gt;/SKILL.md</code></td><td><code>~/.gemini/config/skills/&lt;名&gt;/SKILL.md</code></td></tr>
+      <tr><td>專案技能</td><td><code>&lt;專案&gt;/.claude/skills/</code></td><td><code>&lt;專案&gt;/.agents/skills/&lt;名&gt;/SKILL.md</code></td><td><code>&lt;專案&gt;/.agents/skills/</code></td></tr>
+      <tr><td>連接工具（MCP）</td><td>全域 <code>~/.claude.json</code>；專案 <code>.mcp.json</code></td><td><code>~/.codex/config.toml</code></td><td><code>~/.gemini/config/mcp_config.json</code></td></tr>
+    </table>
+    <ul class="b"><li>這些檔案<b>每次開新對話都會讀進上下文</b>，要知道在哪、並保持精簡</li>
+      <li>檔名只是預設值；同一資料夾裡各家 Agent 讀得到彼此的檔案，所以可以接力</li>
+      <li class="dim">路徑以各工具當時版本為準；不確定就問它：「請告訴我你的全域設定檔與技能資料夾實際在哪」</li></ul>
+  </div>
+</section>
+
+<!-- B6 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>換電腦等於失憶</h2>
+  <ul class="b c">
+    <li>登入同一個帳號，在另一台電腦裝好 Agent，它<b>完全不記得</b>你在別台做過什麼</li>
+    <li>原因：記憶在<span class="k">本機的設定檔與專案資料夾</span>，不在雲端</li>
+    <li>先選好「主要工作的電腦」；需要跨電腦時，用 F 區的方法同步</li>
+  </ul>
+  <div class="say c">生成式 AI 的記憶在帳號；Agent 的記憶在檔案。</div>
+</section>
+
+<!-- B7 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>權限：開多大，取決於熟悉程度</h2>
+  <div class="three c" style="margin-top:.3em;">
+    <div class="box ic"><img src="images/icon_perm.png" alt=""><h3>手動</h3>逐步詢問</div>
+    <div class="box ic y"><img src="images/icon_perm.png" alt=""><h3>半自動</h3>敏感動作才問（新手建議）</div>
+    <div class="box ic o"><img src="images/icon_perm.png" alt=""><h3>全自動</h3>全部放行</div>
+  </div>
+  <div class="c">
+    <table class="t s"><tr><th>工具</th><th>做法</th></tr>
+      <tr><td>Claude Code</td><td>計畫模式（先規劃再確認）／自動模式（半自動）／略過權限（全開，須先在設定打開開關）</td></tr>
+      <tr><td>Codex</td><td>自動審查（新手）→ 完整存取（熟了再開）</td></tr>
+      <tr><td>AntiGravity</td><td>Turbo Mode（半自動）；指令白名單加入 npm、python、pip</td></tr></table>
+    <p>全自動時刪錯、改錯<b>不會先問你</b>，所以要有版本控制與備份兜底；重要專案先讓 Agent 出計畫，確認後才執行。</p>
+  </div>
+</section>
+
+<!-- B8 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>模型分級：S／A／B 三級思維</h2>
+  <div class="three c" style="margin-top:.3em;">
+    <div class="box o"><h3>S 級（最聰明、最貴）</h3>規劃、除錯、重要分析、複雜推理</div>
+    <div class="box"><h3>A 級（性價比高）</h3>日常開發、一般工作</div>
+    <div class="box gr"><h3>B 級（便宜或免費）</h3>已規劃好的大量重複任務、粗工</div>
+  </div>
+  <ul class="b c">
+    <li>另一個旋鈕「思考深度」：想越久越聰明，也越耗 Token；一般用中高檔，特殊任務才開最高</li>
+    <li>用在 Agent 上的模型要聰明到一定程度；太小的模型做複雜任務容易出錯</li>
+    <li>頂級模型每百萬 Token 價格可差到數倍至十倍以上</li>
+  </ul>
+  <p class="c w">⚠ 時效：模型名稱、排名、價格每月在變，現場用最新榜單。</p>
+</section>
+
+<!-- B9 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>用量：5 小時額度與週額度</h2>
+  <ul class="b c">
+    <li><b>5 小時內只能用一定量</b>，同時累積<b>週額度</b>；週額度用完要等下週</li>
+    <li>週額度會被多次 5 小時額度吃光；廠商有時「重置」或「加倍」</li>
+    <li>超額會用「額外用量」計費，別在不知情下燒錢</li>
+  </ul>
+  <table class="t c"><tr><th>工具</th><th>在哪看用量</th></tr>
+    <tr><td>Claude Code</td><td>設定→Usage，或專案右下角小圓圈</td></tr>
+    <tr><td>Codex</td><td>設定裡的剩餘用量（100% 往下扣）；可開「顯示上下文視窗使用量」</td></tr>
+    <tr><td>AntiGravity</td><td>設定→Models，Gemini 與 Claude／GPT 分開計算</td></tr></table>
+  <p class="c w">⚠ 時效：額度規則與價格以官方公告為準。</p>
+</section>
+
+<!-- B10 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>上下文（Context）＝Agent 的短期記憶</h2>
+  <ul class="b c">
+    <li>這個對話裡 AI 目前「看得見」的全部：設定檔、對話歷史、讀進來的檔案</li>
+    <li>大小因模型與方案而異（有的 100 萬、有的 25 萬）</li>
+    <li><span class="g">用到六、七成仍聰明</span>；<span class="w">逼近八、九成開始忘東忘西</span>——聊久了變笨，就是這個原因</li>
+    <li>Agent 介面會顯示剩餘量，要養成習慣去看</li>
+    <li>為什麼燒 Token：每輪都把前面全部內容再送一次，越滿越貴</li>
+  </ul>
+  <div class="say c">全域與專案設定檔每次開新對話都整份載入——必須精簡。</div>
+</section>
+
+<!-- B11 -->
+<section>
+  <div class="crumb">B　核心觀念</div>
+  <h2>上下文快滿時怎麼辦（兩招）</h2>
+  <div class="two c" style="margin-top:.4em;">
+    <div class="box y"><h3>① 壓縮對話（Compact）</h3>把冗長往返濃縮成重點、騰出空間。<br><span class="dim">缺點：壓縮兩三次以上仍可能遺失細節</span></div>
+    <div class="box o"><h3>② 收工→開新對話→開工（推薦）</h3>把重點寫進專案設定檔，開新對話讀回來，Agent 又恢復聰明。</div>
+  </div>
+  <ul class="b c"><li>配套：每個對話只做一件任務；細節放進 Obsidian 這類第二大腦，需要才讀</li></ul>
+  <div class="say c">先把五件事管好：權限、設定檔、用量、模型、上下文。</div>
+</section>
+
+<!-- ===== C ===== -->
+<section class="chap" data-background-image="images/chapter.png" data-background-opacity="0.3" data-background-size="cover">
+  <div class="num">C</div><h1>Agent 本身能做什麼</h1><p class="sub">讀檔、寫程式、上網、做成品</p>
+</section>
+
+<section>
+  <div class="crumb">C　Agent 能做什麼</div>
+  <h2>四種基本能力</h2>
+  <div class="four c" style="margin-top:.5em;">
+    <div class="box ic"><img src="images/icon_project.png" alt=""><h3>讀檔案</h3>提供路徑它就能讀</div>
+    <div class="box ic o"><img src="images/icon_skill.png" alt=""><h3>寫／跑程式</h3>幾乎能完成電腦上任何事</div>
+    <div class="box ic gr"><img src="images/icon_connect.png" alt=""><h3>上網</h3>搜尋、抓資料、下載檔案</div>
+    <div class="box ic y"><img src="images/icon_make.png" alt=""><h3>產出成品</h3>Word、Excel、PPT、網頁、圖、影片</div>
+  </div>
+  <div class="say c" style="margin-top:.8em;">生成式 AI 會「說」，Agent 有「手腳」。</div>
+</section>
+
+<section>
+  <div class="crumb">C　Agent 能做什麼</div>
+  <h2>讀檔案的關鍵習慣：給「精準路徑」</h2>
+  <ul class="b c">
+    <li>檔案上按右鍵→複製路徑（Windows：<code>Ctrl+Shift+C</code>），貼給 Agent；資料夾也可以</li>
+    <li>好處：不必到處搜尋（省 Token）、檔案更新後重讀就是最新、不佔上下文</li>
+    <li>比「拖檔案進對話」更推薦；專案資料夾以外的路徑也讀得到</li>
+  </ul>
+  <pre class="cd">請讀這個檔案並用三句話摘要它在講什麼：
+C:\...\某份規格.pdf</pre>
+  <p class="c dim">注意：PDF 內的圖片與圖片檔需要「多模態」模型才讀得到；純文字模型讀不到。</p>
+</section>
+
+<section>
+  <div class="crumb">C　Agent 能做什麼</div>
+  <h2>示範：整理資料夾</h2>
+  <pre class="cd">請依檔案內容把這個資料夾分類整理。
+你認為該刪除的，不要直接刪，移到一個叫「待刪除」的資料夾，由我確認後再刪。
+C:\Users\...\Downloads</pre>
+  <ul class="b c">
+    <li>成果：資料夾分好類，疑似可刪的集中在「待刪除」，由<b>人最後決定</b></li>
+    <li>整理檔案這類動作，建議用比較聰明的模型；頂級模型一般不會亂刪</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">C　Agent 能做什麼</div>
+  <h2>執行程式與自動裝套件</h2>
+  <div class="c">
+    <p>Agent 背後用 Python 完成任務，缺套件會自己安裝——你不必懂程式，只要描述結果。</p>
+    <table class="t s"><tr><th>類別</th><th>能做什麼</th><th>常用套件</th></tr>
+      <tr><td>Word</td><td>套印範本、批次產生、合併講義</td><td>python-docx</td></tr>
+      <tr><td>Excel</td><td>計算、標紅、排序、依欄位拆檔、畫圖</td><td>pandas、openpyxl、Matplotlib</td></tr>
+      <tr><td>PowerPoint</td><td>一頁一圖、統一字型標誌</td><td>python-pptx、Pillow</td></tr>
+      <tr><td>PDF</td><td>合併、拆分、浮水印、OCR、轉圖檔</td><td>pypdf、pdfplumber、pdf2image</td></tr>
+      <tr><td>小工具</td><td>連結轉 QR code、影片轉字幕、轉圖片</td><td>qrcode、Whisper</td></tr></table>
+    <ul class="b"><li><span class="k">MarkItDown</span>：把 PDF、PPT 轉成乾淨的 Markdown 再餵給 AI，效果通常比直接丟原檔好</li>
+      <li>做法：把「工具清單」整理成一份檔案，丟給 Agent：「讀這份檔案，把套件都裝好」——同一台電腦裝一次，所有 Agent 通用</li>
+      <li>〔實戰〕我的 <code>office-agent-skills</code> 就是這個做法（含 MarkItDown 與 6 個技能）</li></ul>
+    <p class="dim">對研發同事：測試資料彙整、規格轉文字檢索、報表與圖表自動化。</p>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">C　Agent 能做什麼</div>
+  <h2>上網與操作瀏覽器（各家不同）</h2>
+  <table class="t c"><tr><th>工具</th><th>上網方式</th></tr>
+    <tr><td>Codex</td><td>內建「電腦使用」，用自己的游標操作瀏覽器；上網功能被認為最強</td></tr>
+    <tr><td>Claude Code</td><td>需先裝它的 Chrome 外掛並登入帳號</td></tr>
+    <tr><td>AntiGravity</td><td>內建 Playwright（背景虛擬瀏覽器，有些網站有反爬蟲限制）</td></tr></table>
+  <ul class="b c">
+    <li>提示裡寫「上網幫我做某件事」，它會自動選用；示範：上機構官網找出並下載某份指定文件</li>
+    <li><b>原則：能用 API 或連接器就不要用「操控畫面」</b>（慢、脆弱）</li>
+    <li>〔實戰〕我的安裝包幾乎都用 CLI 或 API：GitHub <code>gh</code>、Vercel <code>vercel</code>、NotebookLM <code>nlm</code>、Firebase <code>firebase</code>；需要登入時，只請使用者自己在瀏覽器授權</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">C　Agent 能做什麼</div>
+  <h2>示範：一句話做出完整成品</h2>
+  <div class="c">
+    <p>概念：上網下載歷屆試題 → 每題截圖放進 PPT 一題一頁 → 下一頁附解答 → 存進專案。一次處理 27 題，還會自己找官方答案核對。</p>
+    <p><span class="k">現場 Demo 提示詞（Claude Code）</span></p>
+    <pre class="cd">請在這個專案資料夾完成，做完告訴我檔名：
+1. 上網搜尋「USB PD 3.1 EPR」的官方或可信技術資料，記下參考網址
+2. 做成 3 頁 PPT：①一句話說明 ②表格整理新增的電壓與功率等級 ③「參考來源」與「我不確定、需人工確認的地方」
+3. 版面簡潔、字型統一；存成 USBPD31-EPR.pptx
+數字以官方資料為準，查不到的不要猜。</pre>
+    <ul class="b"><li>重點：一句話串起「查資料→整理→排版→輸出」，看它如何<b>自己標出不確定之處</b>，最後人工核對</li>
+      <li class="w">圖與數據不一定正確，<b>一定要人工檢查</b>；速度與保守程度各家不同，沒有絕對好壞</li></ul>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">C　Agent 能做什麼</div>
+  <h2>使用安全與人的角色</h2>
+  <ul class="b c">
+    <li>先半自動；限制 Agent 在專案目錄內工作；用精準路徑，不要讓它在整顆硬碟亂找</li>
+    <li>網路上隨便抓來的套件、repo、Markdown 說明檔<b>不要亂裝</b>，可能含惡意程式</li>
+    <li>Agent 代勞的是<b>勞務</b>；內容品質與專業判斷必須由人把關</li>
+    <li class="dim">小功能：Codex 設定可開「聽寫」，設快捷鍵即可語音輸入，中文辨識準確</li>
+  </ul>
+</section>
+
+<!-- ===== D ===== -->
+<section class="chap" data-background-image="images/chapter.png" data-background-opacity="0.3" data-background-size="cover">
+  <div class="num">D</div><h1>連接外部工具</h1><p class="sub">通道（怎麼接）與權限（給多少）是兩件事</p>
+</section>
+
+<!-- D1 含 VIZ -->
+<section id="slide-viz">
+  <div class="crumb">D　連接外部工具</div>
+  <h2>為什麼要連？拆掉「每換工具就重學」的牆</h2>
+  <div class="c" style="margin-bottom:.3em;">拖動滑桿：沒連接 → 連接之後（以「做一張封面圖」為例）</div>
+  <div id="viz-wrap">
+    <span class="vlab" style="left:10px;background:var(--success);color:#0d1117;" id="vl-l">連接之後</span>
+    <span class="vlab" style="right:10px;background:#555;color:#fff;" id="vl-r">沒連接</span>
+    <div class="pane" id="viz-before"><div style="margin-left:auto;width:44%;padding-top:1.4em;"><b class="w">① 開網頁生圖工具<br>② 輸入描述<br>③ 下載<br>④ 貼進簡報</b><br>每換一個工具就要重學一遍介面，人當膠水在視窗之間搬東西。</div></div>
+    <div class="pane" id="viz-after"><div style="width:44%;padding-top:1.4em;"><b class="g">一句話：「畫一張 16:9 的封面圖，風格專業明亮」</b><br>圖片直接存進專案資料夾 → 簡報技能把它插進投影片。<br>連上我的 <code>draw</code> 技能（呼叫 OpenAI 生圖 API）後，三個工具串成一條線。</div></div>
+    <div id="viz-divider"></div>
+  </div>
+  <input id="viz-slider" type="range" min="0" max="100" value="0">
+  <p class="c dim">價值不在「能連」，而在連起來之後<b>能把多個工具串成一條工作流</b>；手機版聊天 AI 能連單一服務，但串不起整體流程。</p>
+</section>
+
+<section>
+  <div class="crumb">D　連接外部工具</div>
+  <h2>四種「通道」（怎麼接，像水管）</h2>
+  <div class="four c" style="margin-top:.4em;">
+    <div class="box gr"><h3>① 內建連接器</h3>原廠寫好的 MCP，第一優先</div>
+    <div class="box"><h3>② MCP</h3>「轉接頭」，最萬用</div>
+    <div class="box y"><h3>③ CLI</h3>用命令列控制，背景執行</div>
+    <div class="box o"><h3>④ 直接操控畫面</h3>模擬滑鼠鍵盤，最慢、最不保險</div>
+  </div>
+  <ul class="b c">
+    <li>優先順序：內建連接器 → MCP → CLI → 直接操控</li>
+    <li>選通道前先問兩題：<br>①是 Google 家的服務嗎？（Gmail、雲端硬碟、NotebookLM、Firebase——授權較嚴）<br>②我要「簡單使用（只讀）」還是「完整控制（讀寫刪改下載）」？</li>
+    <li>App 內建的連接器可直接選用；其餘用我的安裝包一步一步裝（見 I 區）</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">D　連接外部工具</div>
+  <h2>三種「權限」（給多少，由低到高）</h2>
+  <div class="three c" style="margin-top:.4em;">
+    <div class="box gr"><h3>免鑰匙</h3>本機就能控制<br>例：讀硬碟上的 Obsidian 筆記</div>
+    <div class="box y"><h3>API Key／Token</h3>給 Agent 一把鑰匙，拿到的人（含外流後的別人）都能開門<br><span class="dim">〔實戰〕生圖：金鑰存本機 <code>~/.openai.env</code>，不貼進對話、不寫進 repo</span></div>
+    <div class="box"><h3>OAuth</h3>像「門禁卡」：有範圍、會過期、可撤銷，最安全但最麻煩<br><span class="dim">〔實戰〕GitHub、Vercel、NotebookLM 都由使用者自己在瀏覽器登入</span></div>
+  </div>
+  <div class="say c">能用 OAuth 就用 OAuth，不得已才用 API Key。「怎麼接」與「給多少權限」要分開想。</div>
+</section>
+
+<section>
+  <div class="crumb">D　連接外部工具</div>
+  <h2>我的安裝包怎麼接（哪些用 CLI、哪些用 MCP）</h2>
+  <div class="c">
+    <table class="t s"><tr><th>服務</th><th>通道</th><th>做法</th><th>權限</th></tr>
+      <tr><td>GitHub</td><td>CLI <code>gh</code></td><td>直接用 CLI，不裝 MCP</td><td>瀏覽器登入</td></tr>
+      <tr><td>Vercel</td><td>CLI <code>vercel</code>，官方 MCP 選用</td><td>CLI 登入就夠；MCP 增加固定開銷、授權涵蓋所有專案，預設不加</td><td>瀏覽器登入</td></tr>
+      <tr><td>NotebookLM</td><td>CLI <code>nlm</code> ＋ MCP</td><td>先 <code>nlm login</code>，再用 MCP 查筆記本</td><td>Google 登入</td></tr>
+      <tr><td>Firebase</td><td>CLI ＋ MCP</td><td>先登入，需要 Agent 直接操作才加 MCP</td><td>Google 登入</td></tr>
+      <tr><td>Obsidian</td><td>MCP（指向 vault）</td><td>本機直接讀寫</td><td>免鑰匙</td></tr>
+      <tr><td>Supabase</td><td>MCP</td><td>金鑰由使用者在終端機自己輸入</td><td>Token 類</td></tr>
+      <tr><td>公司內部 LLM<br>（AIH200×2 at GTC）</td><td>內網 API（OpenAI 相容 <code>/v1</code>）</td><td>模型 Qwen3.8-Flash-Next-FP8<br>AI URL：<code>http://&lt;內網伺服器&gt;:&lt;port&gt;/v1</code></td><td>內網限定</td></tr>
+      <tr><td>生圖</td><td>技能＋API</td><td>金鑰存本機</td><td>API Key</td></tr></table>
+    <p>經驗法則：本機有檔案或有 CLI 的先用 CLI；需要 Agent 反覆查詢才加 MCP——<b>每個 MCP 都有固定開銷</b>。</p>
+    <p class="dim">別人的實測：①某單字遊戲平台沒有連接器→先查官方，沒有就別硬做；②Google 待辦清單無官方連接器→社群 MCP＋自建 OAuth＋重開 Agent 才生效，約半小時。新電腦：內建連接器跟帳號走，自建 MCP／CLI 每台都要重裝。</p>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">D　連接外部工具</div>
+  <h2>「連接指南」做法＋我的實際連接</h2>
+  <div class="c">
+    <p>做法：把「寫給 Agent 看的連接指南」放進專案；之後說「我想連某某工具」，它會評估該走哪條路並帶你操作。</p>
+    <table class="t s"><tr><th>服務</th><th>通道</th><th>狀態</th></tr>
+      <tr><td>GitHub</td><td>CLI <code>gh</code></td><td class="g">已連、已驗證</td></tr>
+      <tr><td>Vercel</td><td>CLI <code>vercel</code>；官方 MCP 選用、目前不啟用</td><td class="g">已連（push GitHub→自動部署，不經 MCP）</td></tr>
+      <tr><td>NotebookLM</td><td>MCP ＋ <code>nlm</code></td><td class="g">已連</td></tr>
+      <tr><td>Obsidian</td><td>MCP（本機 vault）</td><td class="g">已連</td></tr>
+      <tr><td>雲端硬碟／Notion／Claude Docs／瀏覽器</td><td>連接器或 App</td><td class="g">已連</td></tr>
+      <tr><td>Firebase</td><td>CLI（已全域安裝）</td><td class="g">已連</td></tr>
+      <tr><td>Slack、Asana、Linear…</td><td>有連接器</td><td class="w">尚未授權</td></tr></table>
+    <p class="k">節省上下文：「已連」不等於「每次都開」。</p>
+    <ul class="b"><li>雲端連接器（Vercel、雲端硬碟）：需要時才開、用完關回去</li>
+      <li>本機 MCP（NotebookLM）：從全域移到「需要它的專案」的 <code>.mcp.json</code></li>
+      <li>沒在用的外掛整組停用；來路不明的連接器或 MCP 不要接</li></ul>
+  </div>
+</section>
+
+<!-- ===== E ===== -->
+<section class="chap" data-background-image="images/chapter.png" data-background-opacity="0.3" data-background-size="cover">
+  <div class="num">E</div><h1>Skill 與三層設定</h1><p class="sub">把工作流程寫成說明書</p>
+</section>
+
+<section>
+  <div class="crumb">E　Skill 與三層設定</div>
+  <h2>Skill＝一份可重複使用的「使用說明書」</h2>
+  <ul class="b c">
+    <li>本質是 Markdown 純文字檔：什麼情況觸發、做哪些步驟、用哪些內部工具與外部連接</li>
+    <li>定義：把「你的電腦能做的事」包成一個工作流程，寫成說明書</li>
+    <li>學習順序有原因：<b>先內部工具（C）→ 再外部連接（D）→ 最後用 Skill 組成流程</b>；跳過前兩步，Skill 常因缺工具而卡住</li>
+    <li>所有 Agent 都讀得懂這種說明書，是通用格式</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">E　Skill 與三層設定</div>
+  <h2>觸發方式與列出現有技能</h2>
+  <ul class="b c">
+    <li>兩種觸發：<b>自動</b>（提示出現相關關鍵字，Agent 判斷）或<b>直接指定技能名稱</b></li>
+    <li>不確定有哪些技能就問：「列出我的全域技能並簡單說明」</li>
+    <li>我自己的技能類型：生圖、語音合成與播放、影音轉字幕、簡報製作、圖表製作、專案初始化／開工／收工</li>
+    <li>生圖成本概念：低畫質設定下單張約台幣數毛，月費額度可產生上千張 <span class="w">⚠ 時效</span></li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">E　Skill 與三層設定</div>
+  <h2>三層：技能／全域／專案</h2>
+  <div class="c">
+    <table class="t"><tr><th>層</th><th>放什麼</th><th>例</th></tr>
+      <tr><td>全域設定</td><td>與「你這個人」有關、每個專案都要用</td><td>語言偏好、GitHub 帳號、通用技能</td></tr>
+      <tr><td>專案設定</td><td>與「這個專案」有關</td><td>專案目標、規則限制、只在本專案用的技能</td></tr>
+      <tr><td>技能</td><td>可重複的工作流程說明書</td><td>專案初始化、語音回答、簡報製作</td></tr></table>
+    <div class="say">判斷：「換一個新專案後，Agent 還需要記得嗎？」需要→全域；不需要→專案。</div>
+    <ul class="b"><li>全域不要放太多技能：誤觸發機率變高，也每次耗上下文</li>
+      <li>〔實戰〕每個技能的名稱與描述都會在每個對話開頭載入。我把只在特定專案用的 15 個動畫影片類技能，從全域搬到該專案的 <code>.claude/skills/</code>，全域剩 14 個</li>
+      <li class="dim">互相呼叫的技能要整組搬；搬前先備份到技能資料夾以外，否則會載入兩份</li></ul>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">E　Skill 與三層設定</div>
+  <h2>範例一：「用語音回答我」</h2>
+  <ul class="b c">
+    <li>需求：多開幾個視窗讓 Agent 跑任務時，不必一直回頭看螢幕</li>
+    <li>做法：寫一個語音技能＋在全域設定寫「我說『用語音回答我』就用該技能播放結論」</li>
+    <li>設計「三層備援」：免費雲端語音合成（串流，約一秒聽到第一句）→ 失敗改第二種 → 退回 Windows 內建離線語音；背景執行</li>
+    <li>好處：只讀出結論，不太耗 Token</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">E　Skill 與三層設定</div>
+  <h2>範例二：「語音輸入文字正規化」</h2>
+  <ul class="b c">
+    <li>問題：語音輸入常有同音錯字、斷詞錯誤、英文工具名被音譯</li>
+    <li>做法：寫一份<b>全域規則</b>，讓 Agent 依上下文自行修正；小錯字不影響就直接理解</li>
+    <li>若涉及<span class="a">人名、檔名、路徑、指令、數字、日期、核心需求</span>且沒把握：<b>先問一句再做，不自己猜了就執行</b></li>
+    <li>效果：輸入法清洗＋Agent 依上下文再修的雙重保險，幾乎不耗 Token</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">E　Skill 與三層設定</div>
+  <h2>怎麼分享 Skill 與整個專案</h2>
+  <div class="two c" style="margin-top:.4em;">
+    <div class="box"><h3>簡單版</h3>請 Agent 把技能存成一個資料夾，交給別的 Agent 讀；或當備份</div>
+    <div class="box o"><h3>進階版</h3>放上 GitHub repo，把網址給別人，對方的 Agent 讀完就能照做</div>
+  </div>
+  <ul class="b c">
+    <li>觀念轉變：repo 不再只放程式碼，也放<b>「寫給 Agent 看的使用說明書」</b></li>
+    <li>大型專案可做成「複合型技能」：說明書寫明去哪下載素材、裝哪些程式、連哪些工具、建哪些技能</li>
+    <li>一次裝進多個 Agent：請它「也裝到我電腦裡其他 Agent」，它會依各家格式改寫；每個 Agent 都有「製作技能」的內建技能可協助</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">E　Skill 與三層設定</div>
+  <h2>別人的 Skill 不能盲裝</h2>
+  <ul class="b c">
+    <li>別人的技能長在他的環境：你可能缺工具、缺連接、缺金鑰、缺檔案；Agent 會想辦法補齊，所以跑很久也可能漏東漏西</li>
+    <li class="w">熱門 repo（幾萬顆星）不代表安全；外部技能可能夾帶惡意行為</li>
+    <li>比較好的做法：<b>把別人的當參考</b>，自己需要什麼就自己長出來，或改成適合自己工作流的版本</li>
+  </ul>
+</section>
+
+<!-- ===== F ===== -->
+<section class="chap" data-background-image="images/chapter.png" data-background-opacity="0.3" data-background-size="cover">
+  <div class="num">F</div><h1>跨 Agent、跨電腦協作</h1><p class="sub">雲端硬碟、同步、開工與收工</p>
+</section>
+
+<section>
+  <div class="crumb">F　跨 Agent、跨電腦</div>
+  <h2>問題</h2>
+  <ul class="b c">
+    <li>同一台電腦有好幾個 Agent，怎麼接力做同一個專案？</li>
+    <li>有兩三台電腦，怎麼無縫換？</li>
+    <li>全域設定與技能做完，怎麼同步到其他 Agent 與其他電腦？</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">F　跨 Agent、跨電腦</div>
+  <h2>基礎建設一：雲端硬碟「桌面 App」</h2>
+  <div class="c" style="display:flex;gap:24px;align-items:center;">
+    <img src="images/icon_sync.png" alt="" style="width:130px;filter:drop-shadow(0 0 14px rgba(79,195,247,.6));">
+    <ul class="b"><li>裝的是雲端硬碟的<b>電腦版應用程式</b>，不是瀏覽器版；裝好後電腦多一個磁碟機代號（例如 G:）</li>
+      <li>專案資料夾建在雲端硬碟裡，Agent 的專案路徑選這個資料夾，別台電腦讀得到同一份</li></ul>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">F　跨 Agent、跨電腦</div>
+  <h2>基礎建設二：同步設定與技能（含跨電腦步驟）</h2>
+  <div class="c">
+    <p>要同步的是「<b>全域設定與技能</b>」；專案資料夾本身靠雲端硬碟。</p>
+    <div class="two">
+      <div class="box"><h3>外部常見做法</h3>chezmoi＋GitHub repo：原電腦 <code>chezmoi add</code>，另一台 <code>chezmoi update</code>。這是其中一種，不是唯一解</div>
+      <div class="box o"><h3>〔實戰〕我的做法</h3>我沒用 chezmoi：專案與 vault 放雲端硬碟，規則檔放 vault；新電腦的技能與設定用<b>一鍵安裝包</b>重裝</div>
+    </div>
+    <ol style="font-size:.95em;line-height:1.6;"><li>兩台電腦都裝雲端硬碟 App，專案在雲端硬碟內</li>
+      <li>新電腦還原全域設定與技能（一鍵安裝包）</li>
+      <li>開 Agent、選同一個專案資料夾、說「<b>開工</b>」</li></ol>
+    <p class="dim">同一台電腦的其他 Agent：說「把這三個技能也更新到我電腦裡其他 Agent」（技能只是說明書檔案）。把電腦交給別人時：解除安裝雲端硬碟 App。</p>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">F　跨 Agent、跨電腦</div>
+  <h2>基礎建設三：初始化／開工／收工三個技能</h2>
+  <div class="three c" style="margin-top:.3em;">
+    <div class="box"><h3>專案初始化</h3>問你專案要做什麼，建專案設定檔、<code>.gitignore</code>；視環境建 GitHub repo、Obsidian 筆記</div>
+    <div class="box o"><h3>開工</h3>讀專案設定檔（必要時 GitHub、Obsidian、交接檔），知道上次做到哪，再問你這次要做什麼</div>
+    <div class="box gr"><h3>收工</h3>把進度、決策寫回專案設定檔，更新 GitHub 與 Obsidian；<b>沒跑收工，這兩處不會更新</b></div>
+  </div>
+  <ul class="b c">
+    <li><b>跨 Agent 接力</b>：收工時把「下一步、上次中斷在哪、已知限制」寫進 <code>handoff.md</code>；換另一個 Agent 說「開工」就能接著做；也能請另一個 Agent <b>審查</b>，把問題寫進交接檔再叫原 Agent 去修</li>
+    <li>〔實戰〕AntiGravity 上實測 <code>handoff.md</code> 寫入與新對話讀回正常；我的 <code>/startup</code>、<code>/shutdown</code> 就是對應技能</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">F　跨 Agent、跨電腦</div>
+  <h2>三處各司其職</h2>
+  <div class="three c" style="margin-top:.3em;">
+    <div class="box ic"><img src="images/icon_sync.png" alt=""><h3>雲端硬碟</h3>跨電腦同步專案檔案</div>
+    <div class="box ic o"><img src="images/icon_git.png" alt=""><h3>GitHub</h3>版本控制、備份、分享；只放程式碼與重要說明</div>
+    <div class="box ic gr"><img src="images/icon_project.png" alt=""><h3>Obsidian 第二大腦</h3>完整歷程與細節；需要才讀；久了成為知識庫</div>
+  </div>
+  <ul class="b c"><li><code>.gitignore</code>：API Key、帳密、隱私資料不進版本控制</li>
+    <li>Obsidian 本質是 Markdown 檔案，Agent 直接讀寫；任何能讀 Markdown 的筆記軟體都可替代</li></ul>
+</section>
+
+<section>
+  <div class="crumb">F　跨 Agent、跨電腦</div>
+  <h2>注意事項</h2>
+  <ul class="b c">
+    <li>避免多個 Agent 同時寫同一個檔案；工作要拆分</li>
+    <li>雲端硬碟大量頻繁讀寫可能被限流：先在本機暫存資料夾做完，再複製回去</li>
+    <li>一次讀太多 Obsidian 與 GitHub 內容會撐爆上下文：原則是<b>「每次必讀的只有專案設定檔」</b></li>
+    <li>要求 100% 正確的數學或幾何，用<b>截圖</b>保存題目，不要讓 AI 重現圖形</li>
+    <li>這些設定會多花一些 Token；廠商未來可能提供更方便的方式，這是目前可行的做法</li>
+  </ul>
+</section>
+
+<!-- ===== G ===== -->
+<section class="chap" data-background-image="images/chapter.png" data-background-opacity="0.3" data-background-size="cover">
+  <div class="num">G</div><h1>需求釐清：RDQ 四象限</h1><p class="sub">Requirements Discovery Quadrant Method</p>
+</section>
+
+<section>
+  <div class="crumb">G　RDQ 需求釐清</div>
+  <h2>問題：提示詞完整 ≠ 需求完整</h2>
+  <ul class="b c">
+    <li>成品與想像有落差，常常不是 AI 不夠強，而是<b>需求沒對齊</b></li>
+    <li>不先釐清，做專案像在賭博——看到成品才知道有沒有符合</li>
+    <li>位置：放在「專案初始化」之後、真正動工之前；也可獨立使用</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">G　RDQ 需求釐清</div>
+  <h2>四象限（知道／不知道 × 說得出／說不出）</h2>
+  <div class="c">
+    <table class="t s"><tr><th>象限</th><th>意思</th><th>Agent 怎麼幫你</th></tr>
+      <tr><td>1 Known Knowns<br>知道自己知道</td><td>你清楚、能直接說的需求</td><td>你說；Agent 複述確認</td></tr>
+      <tr><td>2 Known Unknowns<br>知道自己不知道</td><td>明確知道有疑問的部分</td><td>你講出疑問；Agent 澄清並給選項</td></tr>
+      <tr><td>3 Unknown Knowns<br>不知道自己知道</td><td>太熟而沒講的細節（評分標準、發佈方式…）</td><td>選項式訪談把它挖出來</td></tr>
+      <tr><td>4 Unknown Unknowns<br>不知道自己不知道</td><td>根本沒想到的盲點與風險</td><td>通用題庫主動提醒：備案、個資、著作權…</td></tr></table>
+    <div class="say">一般人只做到 1、2；3、4 靠 Agent 訪談與題庫補齊。</div>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">G　RDQ 需求釐清</div>
+  <h2>示範流程：研發單位案例</h2>
+  <div class="c">
+    <pre class="cd">做一份新產品的 Design Check List，各部門（EE、ME、EMC、RF、Thermal）可以勾選進度</pre>
+    <ul class="b"><li>Agent 先<b>複述</b>：新產品 → 各部門檢查項目 → 勾選進度 → 看整體完成度；再問四個影響架構的問題：<br>①產品類型與階段（EVT／DVT／PVT）　②各部門項目從哪來（既有範本、規格書、過往專案）<br>③「勾選」的定義（誰確認、要不要附證據、未通過怎麼處理）　④使用規模與權限（誰能改、是否機密、能否放雲端）</li>
+      <li>再提你沒想到的選項：版本與變更紀錄、跨部門相依項目、負責人與到期日、不適用（N/A）須註明理由、匯出 Excel／PDF、避免機密放到公開網址——你勾選要的</li>
+      <li>產出：一頁<b>需求規格卡</b>（已確認／假設／採納／排除／規格／驗收條件），你確認後才開工<br><span class="dim">驗收例：匯入一個已完成專案的舊清單，勾選與完成度須與人工統計一致</span></li>
+      <li class="dim">可再問第二、三輪（上限三輪）：部署平台、資料庫、登入方式…視需求只問一輪也可以</li></ul>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">G　RDQ 需求釐清</div>
+  <h2>題庫、換領域與工具對應</h2>
+  <ul class="b c">
+    <li>技能內建六類題庫：五類通用（辦活動、做簡報…）＋一類專屬某職業情境；越聰明的模型，問的問題越完備</li>
+    <li>換領域：請 Agent「把最後一類題庫換成我的領域，並符合需求探索的方式」</li>
+    <li>對硬體研發可換成：<span class="k">規格、驗證條件、量測設備、供應鏈、法規與安規、風險備案</span></li>
+    <li>可獨立裝成技能（有 Claude Code／AntiGravity 版，也有 ChatGPT 版）</li>
+    <li>對應我的安裝包：<code>rdq-grilling-skills</code>（<code>/rdq</code> ＋ <code>/grilling</code>），見 I 區；另一個類似的工具問題很多，這個設計較精簡、有效率</li>
+  </ul>
+</section>
+
+<!-- ===== H ===== -->
+<section class="chap" data-background-image="images/workflow.png" data-background-opacity="0.4" data-background-size="cover">
+  <div class="num">H</div><h1>我的實戰工作流</h1><p class="sub">本場主角：前面各區，都在為這一區鋪路</p>
+</section>
+
+<section>
+  <div class="crumb">H　實戰工作流</div>
+  <h2>我的工作流總覽</h2>
+  <div class="flow c">
+    <div class="st"><img src="images/icon_start.png" alt=""><b>開工</b><small>F4</small></div><div class="ar">▶</div>
+    <div class="st"><img src="images/icon_research.png" alt=""><b>研究討論</b><small>C5 上網、G 需求釐清</small></div><div class="ar">▶</div>
+    <div class="st"><img src="images/icon_make.png" alt=""><b>做出作品</b><small>C4／C6、E3</small></div><div class="ar">▶</div>
+    <div class="st"><img src="images/icon_git.png" alt=""><b>git → GitHub</b><small>F5</small></div><div class="ar">▶</div>
+    <div class="st"><img src="images/icon_deploy.png" alt=""><b>Vercel 發布</b><small>D 連接</small></div><div class="ar">▶</div>
+    <div class="st"><img src="images/icon_finish.png" alt=""><b>收工</b><small>F4、B11</small></div>
+  </div>
+  <p class="c">作品形式不限：簡報、互動動畫網頁、影片…　每個題目都走同一條六步流程。</p>
+</section>
+
+<section>
+  <div class="crumb">H　實戰工作流</div>
+  <h2>步驟 1：開工</h2>
+  <ul class="b c">
+    <li>讀專案設定檔、工作筆記，確認<b>上次做到哪</b>、有無未提交變更</li>
+    <li>好處：換電腦、換 Agent、換對話都能無縫接續</li>
+    <li>開工時 Agent 的回報：專案、上次做到哪、本地 git 狀態、遠端有沒有新 commit、建議下一步</li>
+  </ul>
+  <div class="say c">說一個字：「開工」。</div>
+</section>
+
+<section>
+  <div class="crumb">H　實戰工作流</div>
+  <h2>步驟 2：依題目做 research 並討論</h2>
+  <ul class="b c">
+    <li>先釐清需求（RDQ），再上網與讀本地資料做研究</li>
+    <li>資料來源分級：<b>官方原文、他人文章、自己的筆記</b>，標註清楚，不把推論當事實</li>
+    <li>產出：<b>研究摘要＋待確認清單</b>，與我來回討論後定案</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">H　實戰工作流</div>
+  <h2>步驟 3：做出作品（簡報、互動動畫網頁、影片…）</h2>
+  <div class="two c" style="margin-top:.2em;">
+    <div>
+      <ul class="b"><li>依題目把研究成果做成作品：簡報、互動動畫網頁（圖表、動畫、可調參數）、配音字幕解說影片、文件</li>
+        <li>不同形式用不同技能（見 E3）</li>
+        <li>用途：讓同事<b>自己動手調參數</b>理解原理，比文件更快懂</li>
+        <li><b>主範例</b>：<code>dovetail-eud-mount</code>（軍規胸掛 × 5 吋 EUD 鳩尾槽機構，20 個提案與 2D／3D 動畫）</li></ul>
+      <p class="dim">現場示範 1–2 分鐘：調整參數→看到動畫變化。</p>
+    </div>
+    <div class="box" style="text-align:center;"><img src="images/qr_dovetail.png" alt="" style="width:170px;border-radius:6px;background:#fff;"><br>
+      <a href="https://dovetail-eud-mount.vercel.app" target="_blank">總覽</a>｜<a href="https://dovetail-eud-mount.vercel.app/rail.html" target="_blank">中央軌道</a>｜<a href="https://dovetail-eud-mount.vercel.app/rail-3d.html" target="_blank">3D 檢視</a><br>
+      <span class="dim">另有 <a href="https://dovetail-eud-mount.vercel.app/edge.html" target="_blank">邊緣卡合</a>、<a href="https://dovetail-eud-mount.vercel.app/edge-3d.html" target="_blank">邊緣 3D</a></span></div>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">H　實戰工作流</div>
+  <h2>步驟 4–5：git repo → GitHub → Vercel 發布</h2>
+  <ul class="b c">
+    <li>每個題目一個 repo；新建時<b>先設私有</b>，確認沒有敏感資料、決定分享後才改公開（公開前掃描檔案名稱與關鍵字）</li>
+    <li>Vercel 連 GitHub，<span class="k">push 即自動部署</span>，得到可分享網址</li>
+    <li><code>.gitignore</code> 與 <code>CLAUDE.md</code> 排除，避免敏感內容或內部規則外流</li>
+  </ul>
+  <div class="flow c"><div class="st"><b>本機專案</b></div><div class="ar">▶</div><div class="st"><b>git push</b><small>GitHub</small></div><div class="ar">▶</div><div class="st"><b>自動部署</b><small>Vercel</small></div><div class="ar">▶</div><div class="st"><b>https://項目名.vercel.app</b></div></div>
+</section>
+
+<section>
+  <div class="crumb">H　實戰工作流</div>
+  <h2>成果牆：已發布的 13 個 Vercel 項目</h2>
+  <p class="c dim" style="margin:0 0 .3em;">Vercel 項目名＝GitHub repo 名，一對一；每次 push 到 <code>main</code> 自動部署。點卡片開網址（查詢日期 2026-10-26）</p>
+  <div class="wall c">
+    <a href="https://poe-pd-series.vercel.app" target="_blank"><b>poe-pd-series</b><span>PoE／PD 供電系列互動頁</span></a>
+    <a href="https://network-cabling-series.vercel.app" target="_blank"><b>network-cabling-series</b><span>網路線材（光纖、銅纜、400G～1.6T）</span></a>
+    <a href="https://tmr-magnet-alignment.vercel.app" target="_blank"><b>tmr-magnet-alignment</b><span>TMR 磁鐵對位與角度誤差</span></a>
+    <a href="https://dovetail-eud-mount.vercel.app" target="_blank"><b>dovetail-eud-mount</b><span>胸掛 × EUD 鳩尾槽機構</span></a>
+    <a href="https://mil-std-1275-power-design.vercel.app" target="_blank"><b>mil-std-1275-power-design</b><span>MIL-STD-1275 54V/240W 電源</span></a>
+    <a href="https://crystal-oscillator-lab.vercel.app" target="_blank"><b>crystal-oscillator-lab</b><span>晶體振盪：起振、匹配、溫補</span></a>
+    <a href="https://iec60529-ip-test-lab.vercel.app" target="_blank"><b>iec60529-ip-test-lab</b><span>IEC 60529 IP 防護等級</span></a>
+    <a href="https://pcb-hdi-stackup.vercel.app" target="_blank"><b>pcb-hdi-stackup</b><span>PCB HDI 疊構</span></a>
+    <a href="https://l3-switch-test-guide.vercel.app" target="_blank"><b>l3-switch-test-guide</b><span>L3 交換器功耗與測試</span></a>
+    <a href="https://power-amp-series.vercel.app" target="_blank"><b>power-amp-series</b><span>功率放大器（導通角、熱失控）</span></a>
+    <a href="https://multiphase-vrm-series.vercel.app" target="_blank"><b>multiphase-vrm-series</b><span>多相 VRM 系列</span></a>
+    <a href="https://dcdc-topology-series.vercel.app" target="_blank"><b>dcdc-topology-series</b><span>DC-DC：BOOST／BUCK／四開關</span></a>
+    <a href="https://fov-vignetting-tool.vercel.app" target="_blank"><b>fov-vignetting-tool</b><span>FOV／暗角計算工具</span></a>
+  </div>
+  <p class="c dim" style="margin-top:.4em;">repo：<code>github.com/tedchen0814/&lt;項目名&gt;</code>（皆公開）</p>
+</section>
+
+<section>
+  <div class="crumb">H　實戰工作流</div>
+  <h2>步驟 6：收工</h2>
+  <ul class="b c">
+    <li>把進度、決策、踩坑寫回<b>專案設定檔與工作筆記</b>；commit／push</li>
+    <li>在根目錄項目清單更新狀態；重要知識另走「餵大腦」流程，不直接寫進知識庫</li>
+    <li>好處：下一次開工<b>只要幾秒</b>就能接上</li>
+  </ul>
+  <div class="say c">收工是為了下一次開工。</div>
+</section>
+
+<section>
+  <div class="crumb">H　實戰工作流</div>
+  <h2>這條流程帶來什麼（誠實版）</h2>
+  <div class="two c" style="margin-top:.2em;">
+    <div class="box gr"><h3>優點</h3>
+      <ul class="b"><li><b>可重複</b>：每題都走同一條六步流程，13 個項目都是同一套做法</li>
+        <li><b>可累積</b>：進度、決策、踩坑寫回，久了就是自己的知識庫</li>
+        <li><b>可分享</b>：Vercel 網址、公開 repo、一鍵安裝包 QR code</li>
+        <li><b>可換機</b>：換電腦或換 Agent，說「開工」就接續（全域設定與技能要另外同步）</li></ul></div>
+    <div class="box y"><h3>代價</h3>
+      <ul class="b"><li><b>前置設定耗時</b>：工具、連接、技能第一次要花時間；一鍵安裝包可大幅縮短</li>
+        <li><b>多花 Token</b>：連接器與技能清單占固定開銷；開工要讀、收工要寫多處；對話越長越貴。對策：一個任務一個對話、不用的連接器關掉、不常用的移到專案層</li>
+        <li><b>圖與數據必須人工驗收</b>：AI 產出的圖、公式、數字可能出錯，由人把關</li></ul></div>
+  </div>
+</section>
+
+<!-- ===== I ===== -->
+<section class="chap" data-background-image="images/install.png" data-background-opacity="0.4" data-background-size="cover">
+  <div class="num">I</div><h1>一鍵安裝包與 QR code</h1><p class="sub">掃一下，把整套工作流帶回家</p>
+</section>
+
+<section>
+  <div class="crumb">I　一鍵安裝包</div>
+  <h2>一鍵安裝是怎麼運作的</h2>
+  <ul class="b c">
+    <li>repo 裡是<b>「寫給 Agent 看的說明書」</b>：把網址貼給 Agent，說「幫我安裝」</li>
+    <li>Agent 讀完會自動檢查環境、安裝需要的 Skill、必要時引導你登入</li>
+    <li>安全習慣：先讓 Agent 說明<b>「會安裝什麼、會改哪裡」</b>，確認再執行</li>
+    <li>原理回扣：就是 E 區「用 GitHub repo 分享整個工作流」</li>
+  </ul>
+  <pre class="cd c">請讀 https://github.com/tedchen0814/claude-code-starter-packs ，
+先告訴我你會安裝什麼、會改哪些檔案，我同意再開始。</pre>
+</section>
+
+<section>
+  <div class="crumb">I　一鍵安裝包</div>
+  <h2>安裝包清單（皆為公開 repo）</h2>
+  <table class="t c"><tr><th>安裝包</th><th>用途</th><th>Repo</th></tr>
+    <tr><td>Claude Code 懶人包</td><td>環境建置、MCP 串接、Skill 一鍵安裝</td><td><code>claude-code-starter-packs</code></td></tr>
+    <tr><td>Codex 懶人包</td><td>Codex 的研發／個人學習版</td><td><code>codex-starter-packs</code></td></tr>
+    <tr><td>AntiGravity 懶人包</td><td>AntiGravity 2 的安裝包（含 Vercel）</td><td><code>antigravity-starter-packs</code></td></tr>
+    <tr><td>辦公室技能包</td><td>簡報、Word／Excel／PDF 批次處理、生圖</td><td><code>office-agent-skills</code></td></tr>
+    <tr><td>需求釐清＋拷問</td><td><code>/rdq</code>、<code>/grilling</code></td><td><code>rdq-grilling-skills</code></td></tr>
+    <tr><td>研發動畫簡報</td><td>原理動畫＋配音字幕解說影片</td><td><code>rd-motion-deck</code></td></tr></table>
+  <p class="c dim">網址：<code>github.com/tedchen0814/&lt;repo&gt;</code></p>
+</section>
+
+<section>
+  <div class="crumb">I　一鍵安裝包</div>
+  <h2>QR code 牆：掃碼開 repo</h2>
+  <div class="qrw c">
+    <div class="q"><img src="images/qr_claude.png" alt=""><b>Claude Code 懶人包</b><span>環境、MCP、Skill</span></div>
+    <div class="q"><img src="images/qr_codex.png" alt=""><b>Codex 懶人包</b><span>研發／學習版</span></div>
+    <div class="q"><img src="images/qr_agy.png" alt=""><b>AntiGravity 懶人包</b><span>含 Vercel</span></div>
+  </div>
+  <p class="c dim">其餘三個（辦公室技能包、需求釐清＋拷問、研發動畫簡報）見下一頁。</p>
+</section>
+
+<section>
+  <div class="crumb">I　一鍵安裝包</div>
+  <h2>QR code 牆（續）</h2>
+  <div class="qrw c">
+    <div class="q"><img src="images/qr_office.png" alt=""><b>辦公室技能包</b><span>簡報、文件、生圖</span></div>
+    <div class="q"><img src="images/qr_rdq.png" alt=""><b>需求釐清＋拷問</b><span>/rdq、/grilling</span></div>
+    <div class="q"><img src="images/qr_motion.png" alt=""><b>研發動畫簡報</b><span>原理動畫＋影片</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="crumb">I　一鍵安裝包</div>
+  <h2>安裝後的第一件事</h2>
+  <ol class="c" style="line-height:1.9;">
+    <li>讓 Agent 列出「<b>已安裝的 Skill 與用途</b>」</li>
+    <li>跑一次「<b>開工</b>」確認環境正常</li>
+    <li>把想改的地方，直接用自然語言告訴 Agent 調整</li>
+  </ol>
+</section>
+
+<!-- ===== J ===== -->
+<section class="chap" data-background-image="images/chapter.png" data-background-opacity="0.3" data-background-size="cover">
+  <div class="num">J</div><h1>風險、結語與延伸</h1>
+</section>
+
+<section>
+  <div class="crumb">J　風險與結語</div>
+  <h2>使用 Agent 的安全守則</h2>
+  <ul class="b c">
+    <li>權限先<b>半自動</b>，再視熟悉度放寬</li>
+    <li>金鑰、帳密、個資、內部機密<b>不提交到 GitHub</b>；<code>.gitignore</code> 要設</li>
+    <li>外部 Skill／repo<b>先讀再裝</b>；不明來源不裝</li>
+    <li>公開發布前檢查：網址是否含內部資訊、專案設定檔是否被排除</li>
+    <li>成果一定<b>人工驗收</b>（尤其圖、公式、數據、引用）</li>
+  </ul>
+</section>
+
+<section>
+  <div class="crumb">J　風險與結語</div>
+  <h2>常見踩坑</h2>
+  <table class="t c"><tr><th>狀況</th><th>解法</th></tr>
+    <tr><td>對話太長變笨</td><td>收工、開新對話</td></tr>
+    <tr><td>沒寫進設定檔，下次不記得</td><td>收工時寫回專案設定檔</td></tr>
+    <tr><td>換電腦忘了同步設定</td><td>先同步（一鍵安裝包）再開工</td></tr>
+    <tr><td>雲端硬碟大量讀寫被限流</td><td>本機暫存再複製回</td></tr>
+    <tr><td>多個 Agent 同時改同一個檔案</td><td>拆分工作範圍</td></tr>
+    <tr><td>裝連接器或 MCP 後沒生效</td><td>重開 Agent</td></tr>
+    <tr><td>技能、連接器全裝全域、什麼都不關</td><td>常用放全域、特定用途放專案層，連接器用完就關</td></tr></table>
+</section>
+
+<section>
+  <div class="crumb">J　風險與結語</div>
+  <h2>我的建議上手順序</h2>
+  <ol class="c" style="line-height:1.85;">
+    <li>選一個 Agent、建一個資料夾、跑一次簡單任務</li>
+    <li>設好權限與全域設定</li>
+    <li>裝初始化／開工／收工三個技能</li>
+    <li>找一個真實題目走完「<b>研究→作品→GitHub→Vercel</b>」一輪</li>
+    <li>再逐步加外部連接與自訂 Skill</li>
+  </ol></section>
+
+<!-- ===== 封底 ===== -->
+<section data-background-image="images/ending.png" data-background-opacity="0.45" data-background-size="cover" class="chap">
+  <h1 style="color:var(--accent2);">開工，做出作品，收工。</h1>
+  <p class="sub" style="margin-top:1em;">每一次的成果都留下紀錄，下一次接著做。</p>
+  <p class="dim" style="margin-top:3em;font-size:.5em;">參考資料：一套公開的 AI Agent 基本功影片系列（EP01–EP07）的整理，個人學習用</p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    width: 1280, height: 720, margin: 0.06,
+    hash: true, transition: 'slide', backgroundTransition: 'fade',
+    center: true, progress: true, controls: true, slideNumber: 'c/t', plugins: []
+  });
+  // VIZ 滑桿
+  (function(){
+    const s = document.getElementById('viz-slider');
+    if(!s) return;
+    s.addEventListener('input', function(){
+      const v = +this.value;
+      document.getElementById('viz-after').style.clipPath = `inset(0 ${100-v}% 0 0)`;
+      document.getElementById('viz-divider').style.left = v + '%';
+      document.getElementById('vl-l').style.opacity = v > 85 ? 0 : 1;
+      document.getElementById('vl-r').style.opacity = v < 15 ? 0 : 1;
+    });
+  })();
+</script>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+  import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy }
+    from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC2Z5YEuQYsE875lNlqVvKTdOvnBgvv1ws",
+    authDomain: "html-slide-builder-28cdd.firebaseapp.com",
+    projectId: "html-slide-builder-28cdd",
+    storageBucket: "html-slide-builder-28cdd.firebasestorage.app",
+    messagingSenderId: "821513705080",
+    appId: "1:821513705080:web:593dd72eea94feec0cbf8d"
+  };
+  const app = initializeApp(firebaseConfig);
+  const fdb = getFirestore(app);
+  const wordsRef = collection(fdb, 'ai_agent_basics_wordcloud');
+
+  const COLORS = ['#4fc3f7','#e8643a','#ffb74d','#81c784','#ce93d8','#80deea','#f48fb1'];
+  let wcData = [];
+  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  window.wcSubmit = async function() {
+    const input = document.getElementById('wc-input');
+    const word = input.value.trim();
+    if (!word) return;
+    const btn = document.getElementById('wc-btn');
+    btn.disabled = true;
+    try { await addDoc(wordsRef, { word, created_at: serverTimestamp() }); input.value = ''; }
+    catch(e) { console.error(e); }
+    finally { btn.disabled = false; }
+  };
+  document.getElementById('wc-input')?.addEventListener('keypress', e => { if (e.key === 'Enter') window.wcSubmit(); });
+  document.getElementById('wc-input')?.addEventListener('keydown', e => e.stopPropagation());
+  document.getElementById('wc-btn')?.addEventListener('click', window.wcSubmit);
+
+  onSnapshot(query(wordsRef, orderBy('created_at', 'asc')), snap => {
+    const words = [];
+    snap.forEach(doc => words.push(doc.data().word));
+    const counts = {};
+    words.forEach(w => counts[w] = (counts[w] || 0) + 1);
+    wcData = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    document.getElementById('wc-total').textContent = words.length;
+    document.getElementById('wc-unique').textContent = wcData.length;
+    document.getElementById('wc-list').innerHTML = wcData.slice(0, 12).map(([w, c]) =>
+      `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06);"><span>${esc(w)}</span><span style="color:var(--accent);font-weight:700;">${c}</span></div>`
+    ).join('') || '<div style="color:#555;padding:8px 0;">尚無資料</div>';
+    const empty = document.getElementById('wc-empty');
+    if (empty) empty.style.display = wcData.length > 0 ? 'none' : '';
+    drawWordCloud();
+  }, err => console.error('wordcloud', err));
+
+  function drawWordCloud() {
+    const canvas = document.getElementById('wc-canvas');
+    if (!canvas || typeof WordCloud === 'undefined') return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 10 || rect.height < 10) return;
+    canvas.width = rect.width; canvas.height = rect.height;
+    if (wcData.length === 0) return;
+    const maxCount = wcData[0][1];
+    WordCloud(canvas, {
+      list: wcData.map(([w, c]) => [w, Math.max(18, Math.round((c / maxCount) * 76))]),
+      gridSize: 6, weightFactor: 1,
+      fontFamily: '"Microsoft JhengHei","Noto Sans TC",sans-serif',
+      color: () => COLORS[Math.floor(Math.random() * COLORS.length)],
+      backgroundColor: 'transparent', rotateRatio: 0.3, shuffle: true
+    });
+  }
+  Reveal.on('slidechanged', e => { if (e.currentSlide?.id === 'slide-wordcloud') setTimeout(drawWordCloud, 150); });
+</script>
+</body>
+</html>
