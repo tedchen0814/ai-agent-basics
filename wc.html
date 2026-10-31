@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>你現在怎麼用 AI？</title>
+<style>
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0d1117; color:#fff; font-family:'Segoe UI','Noto Sans TC',sans-serif; }
+  .card { width:100%; max-width:420px; padding:24px; box-sizing:border-box; text-align:center; }
+  h1 { font-size:1.3rem; line-height:1.5; margin:0 0 .4em; color:#4fc3f7; }
+  p { color:#aaa; font-size:.95rem; margin:0 0 1.2em; }
+  input { width:100%; padding:14px; font-size:18px; border-radius:10px; border:1px solid rgba(79,195,247,.4); background:rgba(255,255,255,.08); color:#fff; box-sizing:border-box; font-family:inherit; outline:none; }
+  button { width:100%; margin-top:12px; padding:14px; font-size:18px; font-weight:700; border:none; border-radius:10px; background:#4fc3f7; color:#0d1117; cursor:pointer; }
+  button:disabled { opacity:.5; }
+  #msg { margin-top:14px; min-height:1.4em; color:#81c784; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>你現在怎麼用 AI？</h1>
+  <p>用一個詞回答（例：查資料、寫程式、翻譯…），可以送多個</p>
+  <input id="w" type="text" maxlength="20" placeholder="輸入關鍵詞…" autocomplete="off" />
+  <button id="b">送出</button>
+  <div id="msg"></div>
+</div>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+  import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+  const app = initializeApp({
+    apiKey: "AIzaSyC2Z5YEuQYsE875lNlqVvKTdOvnBgvv1ws",
+    authDomain: "html-slide-builder-28cdd.firebaseapp.com",
+    projectId: "html-slide-builder-28cdd",
+    storageBucket: "html-slide-builder-28cdd.firebasestorage.app",
+    messagingSenderId: "821513705080",
+    appId: "1:821513705080:web:593dd72eea94feec0cbf8d"
+  });
+  const ref = collection(getFirestore(app), 'ai_agent_basics_wordcloud');
+  const w = document.getElementById('w'), b = document.getElementById('b'), msg = document.getElementById('msg');
+  async function send() {
+    const word = w.value.trim();
+    if (!word) return;
+    b.disabled = true; msg.style.color = '#aaa'; msg.textContent = '送出中…';
+    try { await addDoc(ref, { word, created_at: serverTimestamp() }); w.value = ''; msg.style.color = '#81c784'; msg.textContent = '已送出 ✓ 看投影幕！'; }
+    catch (e) { console.error(e); msg.style.color = '#ff6b6b'; msg.textContent = '送出失敗，請再試一次'; }
+    finally { b.disabled = false; }
+  }
+  b.addEventListener('click', send);
+  w.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+</script>
+</body>
+</html>
